@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from celery import current_app
 from celery import states
-from celery.app.control import broadcast, revoke, rate_limit
+#from celery.app.control import broadcast, revoke, rate_limit
 from celery.utils.text import abbrtask
 
 from .models import TaskState, WorkerState
@@ -175,20 +175,19 @@ class TaskMonitor(ModelMonitor):
     def revoke_tasks(self, request, queryset):
         with current_app.default_connection() as connection:
             for state in queryset:
-                revoke(state.task_id, connection=connection)
+                current_app.control.revoke(state.task_id, connection=connection)
 
     @action(_('Terminate selected tasks'))
     def terminate_tasks(self, request, queryset):
         with current_app.default_connection() as connection:
             for state in queryset:
-                revoke(state.task_id, connection=connection, terminate=True)
+                current_app.control.revoke(state.task_id, connection=connection, terminate=True)
 
     @action(_('Kill selected tasks'))
     def kill_tasks(self, request, queryset):
         with current_app.default_connection() as connection:
             for state in queryset:
-                revoke(state.task_id, connection=connection,
-                       terminate=True, signal='KILL')
+                current_app.control.revoke(state.task_id, connection=connection, terminate=True, signal='KILL')
 
     @action(_('Rate limit selected tasks'))
     def rate_limit_tasks(self, request, queryset):
@@ -199,7 +198,7 @@ class TaskMonitor(ModelMonitor):
             rate = request.POST['rate_limit']
             with current_app.default_connection() as connection:
                 for task_name in tasks:
-                    rate_limit(task_name, rate, connection=connection)
+                    current_app.control.rate_limit(task_name, rate, connection=connection)
             return None
 
         context = {
@@ -242,17 +241,15 @@ class WorkerMonitor(ModelMonitor):
 
     @action(_('Shutdown selected worker nodes'))
     def shutdown_nodes(self, request, queryset):
-        broadcast('shutdown', destination=[n.hostname for n in queryset])
+        current_app.control.broadcast('shutdown', destination=[n.hostname for n in queryset])
 
     @action(_('Enable event mode for selected nodes.'))
     def enable_events(self, request, queryset):
-        broadcast('enable_events',
-                  destination=[n.hostname for n in queryset])
+        current_app.control.broadcast('enable_events', destination=[n.hostname for n in queryset])
 
     @action(_('Disable event mode for selected nodes.'))
     def disable_events(self, request, queryset):
-        broadcast('disable_events',
-                  destination=[n.hostname for n in queryset])
+        current_app.control.broadcast('disable_events', destination=[n.hostname for n in queryset])
 
     def get_actions(self, request):
         actions = super(WorkerMonitor, self).get_actions(request)
