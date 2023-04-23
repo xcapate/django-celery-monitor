@@ -9,15 +9,12 @@ from django.conf import settings
 
 from celery import states
 from celery.events.state import heartbeat_expires
-from celery.five import python_2_unicode_compatible
-
 from . import managers
 
 ALL_STATES = sorted(states.ALL_STATES)
 TASK_STATE_CHOICES = sorted(zip(ALL_STATES, ALL_STATES))
 
 
-@python_2_unicode_compatible
 class WorkerState(models.Model):
     """The data model to store the worker state in."""
 
@@ -59,7 +56,6 @@ class WorkerState(models.Model):
         return mktime(self.last_heartbeat.timetuple())
 
 
-@python_2_unicode_compatible
 class TaskState(models.Model):
     """The data model to store the task state in."""
 
