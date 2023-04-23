@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from celery import current_app
 from celery import states
-from celery.task.control import broadcast, revoke, rate_limit
+from celery.app.control import broadcast, revoke, rate_limit
 from celery.utils.text import abbrtask
 
 from .models import TaskState, WorkerState
